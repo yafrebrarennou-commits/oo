@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . botim-elenakoshka.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . snapchat-firebottom.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
