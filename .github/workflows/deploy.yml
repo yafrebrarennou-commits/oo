@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . iMessage-bottom-honest.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . grindr-bottom-honest.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
