@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . botim-bottomxx18.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . telegram-bottomfire.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
