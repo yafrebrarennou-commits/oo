@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . telegram-elenakoshka.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . https://segnal-elenakoshka.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
