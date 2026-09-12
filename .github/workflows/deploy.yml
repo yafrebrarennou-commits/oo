@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . whatsapp.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . whatsapp-lena.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
