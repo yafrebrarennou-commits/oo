@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . grindr-purebottom-boy.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . onlyfans-purebottom-boy.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
