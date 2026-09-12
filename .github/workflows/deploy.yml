@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . messenger-firebottom.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . iMessage-cute-bottom.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
