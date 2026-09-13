@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . onlyfans-ruby-wilde.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . signal-ruby-wilde.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
