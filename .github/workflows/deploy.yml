@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . grindr-saleb3agman.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . snapchat-saleb3agman.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
