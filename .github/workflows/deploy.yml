@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . onlyfans-iam-your-favorite.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . onlyfans-lusty-curvequeen.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
