@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . snapchat-salopy.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . onlyfans-salopy.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
