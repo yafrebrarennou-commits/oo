@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run: surge . telegram-saletcoco.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run: surge . slepppp.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
