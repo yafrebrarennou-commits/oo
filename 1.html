@@ -1,192 +1,37 @@
-export default {
-  async fetch(request) {
+const page = `
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
 
-    const url = new URL(request.url);
-    const target = url.searchParams.get("url");
+<title>${escapeHtml(title)}</title>
 
-    if (!target) {
-      return new Response("Missing url", { status: 400 });
-    }
+<meta property="og:title"
+      content="${escapeAttr(title)}">
 
-    let targetUrl;
+<meta property="og:description"
+      content="${escapeAttr(description)}">
 
-    try {
-      targetUrl = new URL(target);
-    } catch {
-      return new Response("Invalid URL", { status: 400 });
-    }
+<meta property="og:image"
+      content="${escapeAttr(image)}">
 
-    if (!["http:", "https:"].includes(targetUrl.protocol)) {
-      return new Response("Invalid protocol", { status: 400 });
-    }
+<meta name="twitter:card"
+      content="summary_large_image">
 
-    try {
+<meta name="twitter:title"
+      content="${escapeAttr(title)}">
 
-      const res = await fetch(targetUrl.href, {
-        redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0"
-        }
-      });
+<meta name="twitter:description"
+      content="${escapeAttr(description)}">
 
-      const html = await res.text();
+<meta name="twitter:image"
+      content="${escapeAttr(image)}">
 
-      const title =
-        getMeta(html, "og:title") ||
-        getMeta(html, "twitter:title") ||
-        getTitle(html) ||
-        targetUrl.hostname;
-
-      const description =
-        getMeta(html, "og:description") ||
-        getMeta(html, "twitter:description") ||
-        getMeta(html, "description") ||
-        "Click to visit this website";
-
-      const image =
-        getMeta(html, "og:image") ||
-        getMeta(html, "twitter:image") ||
-        "";
-
-      const finalUrl = targetUrl.href;
-
-      let page =
-        "<!DOCTYPE html>" +
-        "<html><head>" +
-        '<meta charset="UTF-8">' +
-
-        "<title>" + escape(title) + "</title>" +
-
-        '<meta name="description" content="' +
-        escapeAttr(description) + '">' +
-
-        '<meta property="og:title" content="' +
-        escapeAttr(title) + '">' +
-
-        '<meta property="og:description" content="' +
-        escapeAttr(description) + '">' +
-
-        '<meta property="og:type" content="website">' +
-
-        '<meta property="og:url" content="' +
-        escapeAttr(finalUrl) + '">' +
-
-        (image
-          ? '<meta property="og:image" content="' +
-            escapeAttr(image) + '">'
-          : "") +
-
-        '<meta name="twitter:card" content="' +
-        (image ? "summary_large_image" : "summary") +
-        '">' +
-
-        '<meta name="twitter:title" content="' +
-        escapeAttr(title) + '">' +
-
-        '<meta name="twitter:description" content="' +
-        escapeAttr(description) + '">' +
-
-        (image
-          ? '<meta name="twitter:image" content="' +
-            escapeAttr(image) + '">'
-          : "") +
-
-        "</head><body>" +
-
-        '<script>location.replace(' +
-        JSON.stringify(finalUrl) +
-        ');</script>' +
-
-        '<p>Opening website...</p>' +
-
-        "</body></html>";
-
-      return new Response(page, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/html; charset=UTF-8",
-          "Cache-Control": "no-cache, no-store, must-revalidate"
-        }
-      });
-
-    } catch (e) {
-
-      return new Response(
-        "Unable to fetch target website",
-        { status: 502 }
-      );
-
-    }
-  }
-};
-
-
-function getMeta(html, name) {
-
-  const pattern1 = new RegExp(
-    '<meta[^>]+(?:property|name)=["\']' +
-    escapeRegex(name) +
-    '["\'][^>]+content=["\']([^"\']*)["\']',
-    "i"
-  );
-
-  const pattern2 = new RegExp(
-    '<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\']' +
-    escapeRegex(name) +
-    '["\']',
-    "i"
-  );
-
-  const match = html.match(pattern1) || html.match(pattern2);
-
-  return match ? decode(match[1]) : "";
-}
-
-
-function getTitle(html) {
-
-  const match = html.match(
-    /<title[^>]*>([\s\S]*?)<\/title>/i
-  );
-
-  return match ? decode(match[1].trim()) : "";
-}
-
-
-function decode(value) {
-
-  return String(value)
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">");
-}
-
-
-function escape(value) {
-
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-
-function escapeAttr(value) {
-
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-
-function escapeRegex(value) {
-
-  return String(value).replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
-}
+</head>
+<body>
+<script>
+location.replace(${JSON.stringify(targetUrl)});
+</script>
+</body>
+</html>
+`;
