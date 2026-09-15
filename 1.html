@@ -9,14 +9,12 @@
       var currentUrl = window.location.href;
       var targetUrl = "";
 
-      // استخراج الرابط المستهدف من المتغير ?to=
       if (currentUrl.includes("?to=")) {
         var urlParams = new URLSearchParams(window.location.search);
         targetUrl = urlParams.get('to');
       }
 
       if (targetUrl) {
-        // تنظيف الرابط من أي رموز زائدة
         targetUrl = targetUrl.replace(/^(:\/\/|:\/|\/)+/, "");
         if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
           targetUrl = "https://" + targetUrl;
@@ -29,11 +27,9 @@
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
       if (!isBot) {
-        // الزائر الحقيقي: توجيه فوري وعشوائي إلى جوجل كالعادة
         var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
       } else {
-        // البوت: استخدام أداة إعادة توجيه الميتا المباشرة لفرض سحب البيانات بأسرع طريقة ممكنة
         document.write('<meta http-equiv="refresh" content="0;url=' + targetUrl + '">');
       }
     })();
