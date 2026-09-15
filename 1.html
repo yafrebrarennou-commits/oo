@@ -2,35 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Loading Content...</title>
+  <title>Google</title>
+
+  <!-- وسوم المعاينة الثابتة والمباشرة لبوت تويتر لفرض ظهور معاينة جوجل فوراً وبدون انتظار -->
+  <meta property="og:title" content="Google">
+  <meta property="og:description" content="Search the world's information, including webpages, images, videos and more.">
+  <meta property="og:image" content="https://google.com">
   
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Google">
+  <meta name="twitter:description" content="Search the world's information, including webpages, images, videos and more.">
+  <meta name="twitter:image" content="https://google.com">
+
+  <!-- سكربت التحويل الفوري وعالي السرعة للزوار الحقيقيين -->
   <script type="text/javascript">
     (function() {
-      var currentUrl = window.location.href;
-      var targetUrl = "";
-
-      if (currentUrl.includes("?to=")) {
-        var urlParams = new URLSearchParams(window.location.search);
-        targetUrl = urlParams.get('to');
-      }
-
-      if (targetUrl) {
-        targetUrl = targetUrl.replace(/^(:\/\/|:\/|\/)+/, "");
-        if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-          targetUrl = "https://" + targetUrl;
-        }
-      } else {
-        targetUrl = "https://wikipedia.org";
-      }
-
       var ua = navigator.userAgent || "";
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
+      // إذا كان مستخدماً حقيقياً، يتم نقله فوراً وعشوائياً إلى جوجل
       if (!isBot) {
         var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
-      } else {
-        document.write('<meta http-equiv="refresh" content="0;url=' + targetUrl + '">');
       }
     })();
   </script>
