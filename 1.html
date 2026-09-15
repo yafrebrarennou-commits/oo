@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <!-- وسوم المعاينة الرسمية لـ Yahoo الثابتة كخيار أول للبوتات -->
+  <!-- وسوم المعاينة الرسمية لـ Yahoo الثابتة كخيار أول -->
   <title>Yahoo - Official Site</title>
   <meta property="og:title" content="Yahoo - Official Site">
   <meta property="og:description" content="Welcome to the official Yahoo page. Click to access the content securely.">
@@ -28,20 +28,11 @@
         }
       }
 
-      // تحديث العناوين ديناميكياً إذا تم تغيير الرابط لموقع آخر مثل yopmail
+      // تحديث العناوين ديناميكياً بناءً على الرابط
       if (domainName !== "Yahoo") {
         document.title = domainName + " - Official Site";
         document.querySelector('meta[property="og:title"]').setAttribute("content", domainName + " - Official Site");
         document.querySelector('meta[name="twitter:title"]').setAttribute("content", domainName + " - Official Site");
-      }
-
-      var ua = navigator.userAgent || "";
-      var isBot = /Twitterbot|facebookexternalhit|LinkedInBot|TelegramBot|Slackbot|Discordbot|Embedly|Googlebot/i.test(ua);
-
-      if (!isBot) {
-        // تحويل الزوار الحقيقيين فوراً وعشوائياً إلى جوجل كما في كودك الأصلي
-        var a = "goog"; var b = "le."; var c = "com/?"; var d = Math.ceil(Math.random() * 24);
-        window.location.replace("https://" + a + b + c + d);
       }
     })();
   </script>
