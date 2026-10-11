@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . telegram-sa-lep.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . snapchat-sa-lep.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
