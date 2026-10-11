@@ -20,5 +20,5 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . signal-scarletthote.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . telegram-alina-s.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
