@@ -20,6 +20,6 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . telehram-asshote.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . telehram-immon15.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
