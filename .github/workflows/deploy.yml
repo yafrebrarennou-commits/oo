@@ -20,6 +20,6 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . signal-tamerus.surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . telehram-tamerus.surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
