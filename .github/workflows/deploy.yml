@@ -20,6 +20,6 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . onlyfans-lotana.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . onlyfans-kemilia.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
