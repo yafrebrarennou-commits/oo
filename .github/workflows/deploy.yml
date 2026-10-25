@@ -20,6 +20,6 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . 4kwatch.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . nenalyo.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
