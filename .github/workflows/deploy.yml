@@ -20,6 +20,6 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge . snapchat-salebku.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge . snapchat-bbootom.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
