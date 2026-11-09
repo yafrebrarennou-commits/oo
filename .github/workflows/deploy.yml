@@ -20,7 +20,7 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge .   snapchat-oratax.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge .   signal-saliifet.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
  
