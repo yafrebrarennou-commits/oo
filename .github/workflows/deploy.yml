@@ -22,5 +22,5 @@ jobs:
       - name: Deploy to Surge
         run:     surge .   armala-1.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
-  
+   
  
