@@ -20,7 +20,7 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge .   group-whatsapp.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge .   armala-1.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
  
  
