@@ -1,6 +1,5 @@
-
 name: Surge Manager
-on:
+"on":
   workflow_dispatch:
     inputs:
       action:
