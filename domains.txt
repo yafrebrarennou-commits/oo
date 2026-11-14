@@ -1,6 +1,5 @@
 botim-bottomxx18.surge.sh
 botim-elenakoshka.surge.sh
-bsky.surge.sh
 discord-alina-s.surge.sh
 discord-dolly.surge.sh
 discord-salwaaxx.surge.sh
