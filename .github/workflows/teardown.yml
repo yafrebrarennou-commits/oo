@@ -1,0 +1,14 @@
+name: Teardown
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Domain to delete'
+        required: true
+        type: string
+jobs:
+  teardown:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm install -g surge
+      - run: surge teardown ${{ inputs.domain }} --token ${{ secrets.SURGE_TOKEN }}
