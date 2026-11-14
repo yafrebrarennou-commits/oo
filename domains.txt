@@ -143,8 +143,7 @@ telehram-tamerus.surge.sh
 vip-project-oo-2026.surge.sh
 vip-site-oo.surge.sh
 what-lena554422.surge.sh
-whatsapp-16462446370.surge.sh
-whatsapp-elenakoshka.surge.sh
+
 
 
 whatsapp-safaax.surge.sh
