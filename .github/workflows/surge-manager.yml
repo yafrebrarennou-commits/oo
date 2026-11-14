@@ -1,1 +1,50 @@
 
+name: Surge Manager
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'اختار المهمة'
+        required: true
+        default: 'deploy-all'
+        type: choice
+        options:
+          - deploy-all
+          - delete-one
+      domain:
+        description: 'لو هتمسح اكتب الدومين هنا'
+        required: false
+        default: ''
+jobs:
+  surge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install -g surge
+
+      - name: Deploy All Auto
+        if: inputs.action == 'deploy-all'
+        run: |
+          for D in $(cat domains.txt); do
+            echo "Deploying to $D"
+            SUCCESS=false
+            for TRY in 1 2 3 4 5; do
+              if surge . $D --token ${{ secrets.SURGE_TOKEN }}; then
+                echo "Done $D"
+                SUCCESS=true
+                break
+              else
+                echo "Rate limited or failed $D - Try $TRY - sleeping 60s and retry same domain"
+                sleep 60
+              fi
+            done
+            if [ "$SUCCESS" = false ]; then
+              echo "Skipping $D after 5 tries"
+            fi
+            echo "Resting 10s before next domain"
+            sleep 10
+          done
+
+      - name: Delete One
+        if: inputs.action == 'delete-one'
+        run: surge teardown ${{ inputs.domain }} --token ${{ secrets.SURGE_TOKEN }}
