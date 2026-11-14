@@ -9,5 +9,5 @@ jobs:
       - run: |
           for D in $(cat domains.txt); do
             echo "Deploying to $D"
-            surge . $D --token ${{ secrets.SURGE_TOKEN }}
+            surge . $D --token ${{ secrets.SURGE_TOKEN }} || echo "FAILED $D - skipping"
           done
