@@ -20,7 +20,7 @@ jobs:
         run: npm install -g surge
 
       - name: Deploy to Surge
-        run:     surge .   telegram-meraxs.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
+        run:     surge .   telegram-solinaa.Surge.sh --token ${{ secrets.SURGE_TOKEN }}
 
    
  
