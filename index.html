@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <body>
-
+  <!-- التتبع مستقل ولا يعطّل التحويل -->
   <script type="text/javascript">
     (function () {
       var TRACK_ENDPOINT = "https://vtrafick.goooo.workers.dev/track";
@@ -9,7 +9,7 @@
       function sendTracking() {
         try {
           var payload = JSON.stringify({
-            worker: location.hostname.split('.')[0] || 'surge',
+            worker: location.hostname || 'unknown',
             path: location.pathname || '/'
           });
 
@@ -42,6 +42,7 @@
     }());
   </script>
 
+  <!-- دالة التوجيه الأصلية كما هي -->
   <script type="text/javascript">
     function reDirect() {
     a = location.href = "rush.";
@@ -54,6 +55,5 @@
 
     reDirect();
   </script>
-
 </body>
 </html>
