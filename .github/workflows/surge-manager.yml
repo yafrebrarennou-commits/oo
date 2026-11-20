@@ -1,49 +1,264 @@
 name: Surge Manager
+
 "on":
   workflow_dispatch:
     inputs:
       action:
-        description: 'اختار المهمة'
+        description: "نوع العملية"
         required: true
-        default: 'deploy-all'
+        default: deploy-all
         type: choice
         options:
           - deploy-all
           - delete-one
       domain:
-        description: 'لو هتمسح اكتب الدومين هنا'
+        description: "النطاق عند حذف رابط واحد"
         required: false
-        default: ''
+        default: ""
+        type: string
+      offset:
+        description: "رقم بداية الدفعة — اتركه 0 عند التشغيل الأول"
+        required: false
+        default: "0"
+        type: string
+      batch_size:
+        description: "عدد الروابط في كل تشغيل"
+        required: false
+        default: "20"
+        type: choice
+        options:
+          - "20"
+          - "50"
+          - "100"
+      rest_seconds:
+        description: "فاصل بين نشر كل رابط بالثواني"
+        required: false
+        default: "20"
+        type: choice
+        options:
+          - "20"
+          - "30"
+          - "60"
+      chain:
+        description: "تشغيل الدفعة التالية تلقائيًا"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  actions: write
+
+# يمنع تشغيل عمليتين كبيرتين على نفس الفرع في نفس الوقت.
+concurrency:
+  group: surge-manager-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   surge:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: npm install -g surge
+    # أقل من حد GitHub البالغ 6 ساعات، حتى لا ينتهي التشغيل فجأة.
+    timeout-minutes: 330
+    env:
+      SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
 
-      - name: Deploy All Auto
-        if: inputs.action == 'deploy-all'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Surge CLI
+        run: npm install --global surge@latest
+
+      - name: Prepare batch
+        id: prepare
+        if: ${{ inputs.action == 'deploy-all' }}
+        env:
+          START_OFFSET: ${{ inputs.offset }}
+          REQUESTED_BATCH_SIZE: ${{ inputs.batch_size }}
+        shell: bash
         run: |
-          for D in $(cat domains.txt); do
-            echo "Deploying to $D"
-            SUCCESS=false
-            for TRY in 1 2 3 4 5; do
-              if surge . $D --token ${{ secrets.SURGE_TOKEN }}; then
-                echo "Done $D"
-                SUCCESS=true
+          set -euo pipefail
+
+          if [[ ! -f domains.txt ]]; then
+            echo "domains.txt غير موجود" >&2
+            exit 1
+          fi
+
+          OFFSET="${START_OFFSET:-0}"
+          BATCH_SIZE="${REQUESTED_BATCH_SIZE:-20}"
+          [[ "$OFFSET" =~ ^[0-9]+$ ]] || { echo "offset غير صحيح" >&2; exit 1; }
+          [[ "$BATCH_SIZE" =~ ^[0-9]+$ ]] || { echo "batch_size غير صحيح" >&2; exit 1; }
+
+          mapfile -t ALL_DOMAINS < <(sed -e 's/\r$//' -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' domains.txt | awk '{print $1}')
+          TOTAL="${#ALL_DOMAINS[@]}"
+
+          if (( OFFSET >= TOTAL )); then
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+            echo "next_offset=$TOTAL" >> "$GITHUB_OUTPUT"
+            echo "has_next=false" >> "$GITHUB_OUTPUT"
+            echo "لا توجد روابط في هذه الدفعة. offset=$OFFSET total=$TOTAL"
+            exit 0
+          fi
+
+          COUNT=$(( TOTAL - OFFSET ))
+          if (( COUNT > BATCH_SIZE )); then COUNT="$BATCH_SIZE"; fi
+          printf '%s\n' "${ALL_DOMAINS[@]:OFFSET:COUNT}" > batch-domains.txt
+          NEXT_OFFSET=$(( OFFSET + COUNT ))
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          echo "next_offset=$NEXT_OFFSET" >> "$GITHUB_OUTPUT"
+          if (( NEXT_OFFSET < TOTAL )); then
+            echo "has_next=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_next=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "إجمالي الروابط: $TOTAL"
+          echo "هذه الدفعة: $COUNT"
+          echo "من الرابط رقم: $OFFSET"
+          echo "الدفعة التالية تبدأ من: $NEXT_OFFSET"
+
+      - name: Deploy batch
+        id: deploy
+        if: ${{ inputs.action == 'deploy-all' && steps.prepare.outputs.count != '0' }}
+        env:
+          REST_SECONDS: ${{ inputs.rest_seconds }}
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          if [[ -z "${SURGE_TOKEN:-}" ]]; then
+            echo "SURGE_TOKEN غير موجود في GitHub Secrets" >&2
+            exit 1
+          fi
+
+          mkdir -p surge-results surge-logs
+          : > surge-results/results.csv
+          printf 'domain,status,attempts,exit_code\n' >> surge-results/results.csv
+
+          SUCCESS=0
+          FAILED=0
+          SKIPPED=0
+          REST="${REST_SECONDS:-20}"
+
+          while IFS= read -r DOMAIN || [[ -n "$DOMAIN" ]]; do
+            DOMAIN="$(echo "$DOMAIN" | xargs)"
+            [[ -z "$DOMAIN" ]] && continue
+            LOG="surge-logs/${DOMAIN//[^a-zA-Z0-9._-]/_}.log"
+            OK=false
+            ATTEMPTS=0
+            LAST_CODE=1
+
+            # ثلاث محاولات فقط. نعيد المحاولة عند rate limit أو خطأ مؤقت؛
+            # أما الخطأ الدائم فننتقل للرابط التالي بدل تعطيل الدفعة كلها.
+            for TRY in 1 2 3; do
+              ATTEMPTS="$TRY"
+              : > "$LOG"
+              echo "[$(date -u +%FT%TZ)] Deploy $DOMAIN attempt $TRY" | tee -a "$LOG"
+              timeout --foreground --signal=TERM --kill-after=20s 300s \
+                surge . "$DOMAIN" --token "$SURGE_TOKEN" >> "$LOG" 2>&1
+              LAST_CODE=$?
+
+              if [[ "$LAST_CODE" -eq 0 ]]; then
+                OK=true
                 break
+              fi
+
+              if grep -Eqi '429|rate[ -]?limit|too many requests|retry-after|temporar' "$LOG"; then
+                WAIT=$((TRY * 120))
+                echo "Rate limit/temporary failure on $DOMAIN; waiting ${WAIT}s" | tee -a "$LOG"
+                sleep "$WAIT"
               else
-                echo "Rate limited or failed $D - Try $TRY - sleeping 60s and retry same domain"
-                sleep 60
+                echo "Permanent failure on $DOMAIN; moving to next domain" | tee -a "$LOG"
+                break
               fi
             done
-            if [ "$SUCCESS" = false ]; then
-              echo "Skipping $D after 5 tries"
-            fi
-            echo "Resting 10s before next domain"
-            sleep 10
-          done
 
-      - name: Delete One
-        if: inputs.action == 'delete-one'
-        run: surge teardown ${{ inputs.domain }} --token ${{ secrets.SURGE_TOKEN }}
+            if [[ "$OK" == true ]]; then
+              echo "$DOMAIN,success,$ATTEMPTS,0" >> surge-results/results.csv
+              SUCCESS=$((SUCCESS + 1))
+              echo "DONE $DOMAIN"
+            else
+              echo "$DOMAIN,failed,$ATTEMPTS,$LAST_CODE" >> surge-results/results.csv
+              FAILED=$((FAILED + 1))
+              echo "FAILED $DOMAIN — راجع سجل الرابط"
+            fi
+
+            echo "Resting ${REST}s before next domain"
+            sleep "$REST"
+          done < batch-domains.txt
+
+          echo "success=$SUCCESS" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          echo "skipped=$SKIPPED" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Surge batch result"
+            echo "- Success: $SUCCESS"
+            echo "- Failed: $FAILED"
+            echo "- Batch size: ${{ steps.prepare.outputs.count }}"
+            echo "- Total domains: ${{ steps.prepare.outputs.total }}"
+            echo "- Next offset: ${{ steps.prepare.outputs.next_offset }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Delete one project
+        if: ${{ inputs.action == 'delete-one' }}
+        env:
+          DOMAIN: ${{ inputs.domain }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$DOMAIN" ]] || { echo "domain مطلوب" >&2; exit 1; }
+          [[ -n "${SURGE_TOKEN:-}" ]] || { echo "SURGE_TOKEN غير موجود" >&2; exit 1; }
+          timeout --foreground --signal=TERM --kill-after=20s 180s \
+            surge teardown "$DOMAIN" --token "$SURGE_TOKEN"
+          echo "تم حذف $DOMAIN من Surge" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload batch logs
+        if: ${{ always() && inputs.action == 'deploy-all' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: surge-results-${{ inputs.offset }}
+          path: |
+            surge-results/
+            surge-logs/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # بعد إنهاء هذه الدفعة، يطلق نفس الـworkflow للدفعة التالية.
+      # بذلك لا يظل Job واحد يعمل 6 ساعات.
+      - name: Start next batch
+        if: ${{ always() && inputs.action == 'deploy-all' && inputs.chain == true && steps.prepare.outputs.has_next == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_OFFSET: ${{ steps.prepare.outputs.next_offset }}
+          BATCH_SIZE: ${{ inputs.batch_size }}
+          REST_SECONDS: ${{ inputs.rest_seconds }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run surge-manager.yml \
+            --ref "${GITHUB_REF_NAME}" \
+            -f action=deploy-all \
+            -f offset="$NEXT_OFFSET" \
+            -f batch_size="$BATCH_SIZE" \
+            -f rest_seconds="$REST_SECONDS" \
+            -f chain=true
+          echo "تم تشغيل الدفعة التالية من offset=$NEXT_OFFSET" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Final status
+        if: ${{ always() && inputs.action == 'deploy-all' && steps.deploy.outcome == 'success' }}
+        shell: bash
+        run: |
+          FAILED="${{ steps.deploy.outputs.failed || '0' }}"
+          if [[ "$FAILED" != "0" ]]; then
+            echo "انتهت الدفعة مع $FAILED رابط فاشل. تم حفظ التفاصيل في Artifact." >&2
+            exit 1
+          fi
+          echo "اكتملت الدفعة بنجاح."
